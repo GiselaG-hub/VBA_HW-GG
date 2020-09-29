@@ -1,0 +1,131 @@
+Sub Data_Analysis()
+    
+     ' Set initial variable for holding the ticker name
+     Dim TickerSymbol As String
+     TickerSymbol = " "
+     
+      
+     ' Variable for ticker volume
+     Dim TotalTickerVolume As Double
+     TotalTickerVolume = 0
+       
+     'For Calc of Delta Price & Delta Percent
+     Dim OpenPrice As Double
+     OpenPrice = 0
+     Dim ClosePrice As Double
+     ClosePrice = 0
+     Dim DeltaPrice As Double
+     DeltaPrice = 0
+     Dim DeltaPercent As Double
+     DeltaPercent = 0
+           
+     
+       ' Location tracker for each ticker symbol
+      Dim SummaryTableRow As Long
+      SummaryTableRow = 2
+        
+      ' Set initial row count for current worksheet
+      Dim RowCount As Long
+      Dim i As Long
+        
+      RowCount = Cells(Rows.Count, 1).End(xlUp).Row
+        
+        'For Summary Table (1) Headers
+            Range("I1").Value = "Ticker"
+            Range("J1").Value = "Yearly Change"
+            Range("K1").Value = "Percent Change"
+            Range("L1").Value = "Total Stock Value"
+        
+        ' For Summary Table (2) Headers
+            Range("P1").Value = "Ticker"
+            Range("Q1").Value = "Value"
+            Range("O2").Value = "Greatest % increase"
+            Range("O3").Value = "Greatest % decrease"
+            Range("O4").Value = "Greatest total volume"
+
+        
+        ' Set initial value for OpenPrice
+        OpenPrice = Cells(2, 3).Value
+        
+        ' Loop through worksheet
+        
+        For i = 2 To RowCount
+            ' Check if we are still w/in the same ticker symbol, otherwise print result
+                        
+            If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+                ' Set the ticker symbol and print
+                TickerSymbol = Cells(i, 1).Value
+                
+                ' Calculate DeltaPrice and DeltaPercent
+                ClosePrice = Cells(i, 6).Value
+                DeltaPrice = ClosePrice - OpenPrice
+                
+                ' Check Division by 0
+                If OpenPrice <> 0 Then
+                    DeltaPercent = (DeltaPrice / OpenPrice) * 100
+                         
+                End If
+                
+                ' Add to the Ticker name total volume
+                TotalTickerVolume = TotalTickerVolume + Cells(i, 7).Value
+                ' Print the Ticker Name in the Summary Table, Column I
+                Range("I" & SummaryTableRow).Value = TickerSymbol
+                ' Print the Ticker Name in the Summary Table, Column J
+                Range("J" & SummaryTableRow).Value = DeltaPrice
+                
+                ' Fill Yearly Change, DeltaPrice - colors[Green = positive & Red = negative]
+                If (DeltaPrice > 0) Then
+                
+                    'Fill column with GREEN
+                    Range("J" & SummaryTableRow).Interior.ColorIndex = 4
+                
+                ElseIf (DeltaPrice <= 0) Then
+                    'Fill column with RED
+                    Range("J" & SummaryTableRow).Interior.ColorIndex = 3
+                
+                End If
+                
+                 ' Print % on summary table
+                Range("K" & SummaryTableRow).Value = (CStr(DeltaPercent) & "%")
+                
+                ' Print the Ticker Volume in the Summary Table, Column L
+                Range("L" & SummaryTableRow).Value = TotalTickerVolume
+                
+                ' Add 1 to the summary table row count
+                SummaryTableRow = SummaryTableRow + 1
+                
+                ' Reset DeltaPrice and DeltaPercent holders
+                DeltaPrice = 0
+                
+                ' Loop through DeltaPercent
+                ClosePrice = 0
+                
+                ' Next Ticker OpenPrice
+                OpenPrice = Cells(i + 1, 3).Value
+            
+                ' Reset counters
+                DeltaPercent = 0
+                TotalTickerVolume = 0
+         
+            'If same ticker name, add to Total Ticker Volume
+            Else
+                ' Total Ticker Volume increase
+                TotalTickerVolume = TotalTickerVolume + Cells(i, 7).Value
+            End If
+                     
+        Next i
+            
+            ' For summary table 2
+                  
+            Range("Q2") = "%" & WorksheetFunction.Max(Range("K2:K" & RowCount)) * 100
+            Range("Q3") = "%" & WorksheetFunction.Min(Range("K2:K" & RowCount)) * 100
+            Range("Q4") = WorksheetFunction.Max(Range("L2:L" & RowCount))
+            
+            IncreaseNumber = WorksheetFunction.Match(WorksheetFunction.Max(Range("K2:K" & RowCount)), Range("K2:K" & RowCount), 0)
+            DecreaseNumber = WorksheetFunction.Match(WorksheetFunction.Min(Range("K2:K" & RowCount)), Range("K2:K" & RowCount), 0)
+            VolumeNumber = WorksheetFunction.Match(WorksheetFunction.Max(Range("L2:L" & RowCount)), Range("L2:L" & RowCount), 0)
+            
+            Range("P2") = Cells(IncreaseNumber + 1, 9)
+            Range("P3") = Cells(DecreaseNumber + 1, 9)
+            Range("P4") = Cells(VolumeNumber + 1, 9)
+End Sub
